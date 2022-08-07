@@ -107,27 +107,72 @@ contract web3RSVP{
         
 
         //To check if already confirmed 
-        address rsvpClaimed;
+        //address rsvpClaimed; // OLD SOLUTION
 
         //check if the attendee is already confirmed
         for (uint256 index = 0; index < myEvent.claimedRSVPs.length; index++) {
-            if (myEvent.claimedRSVPs[index] == attendee) {
-                rsvpClaimed = myEvent.claimedRSVPs[index];   
+            require(myEvent.claimedRSVPs[index] != attendee,"ALREADY CHECKED IN");
+            //if (myEvent.claimedRSVPs[index] == attendee) { // OLD solution
+            //    rsvpClaimed = myEvent.claimedRSVPs[index];   
             }
 
 
            // require(attendee == myEvent.claimedRSVPs[index]);    
-        }
 
-        require(attendee !=rsvpClaimed, "ALREADY CHECKED IN");
+        //require(attendee !=rsvpClaimed, "ALREADY CHECKED IN"); // OLD solution
 
-
-        //pay out deposit to attendee
-        //deposit attendee 
+        //Check so owner haven't already claimed deposits
+        require(myEvent.paidOut == false,"ALREADY PAID OUT");
 
         //move the attendee to claimedRSVPs
         myEvent.claimedRSVPs.push(attendee);
 
+        //pay out deposit to attendee
+        (bool sent,) = attendee.call{value: myEvent.deposit}(""); // why "(bool sent,)"
+
+        //if it failed to send deposit, remove from claimedRSVPs
+        if(!sent){
+            myEvent.claimedRSVPs.pop(); // pop removes the last addition 
+        }
+
+        require(sent, "FALIED TO SEND");
+    }
+
+    //confirm the all of the confirmedRSVPs
+    function confirmAll(bytes32 eventId) external{
+
+        //look up the event from the mapping using the eventID provided
+        //CreateEvent storage myEvent = idToEvent[eventId]; //OLD own solution
+        CreateEvent memory myEvent = idToEvent[eventId]; //memory for only temp use here
+
+        //Check who can call
+        require(msg.sender == myEvent.eventOwner, "NOT ALLOWED");
+
+        //Confirm all
+        for (uint256 index = 0; index < myEvent.confirmedRSVPs.length; index++) {
+            confirmAttendee(eventId, myEvent.confirmedRSVPs[index]);
+        }
+    }
+
+    function withdrawalFunds(bytes32 eventId) external{
+
+        //look up the event from the mapping using the eventID provided
+        CreateEvent storage myEvent = idToEvent[eventId]; //storage for chancing the state
+
+        //Check who can call
+        require(msg.sender == myEvent.eventOwner, "NOT ALLOWED");
+
+        //Check required time after event
+
+        //Compare confirmedRSVPs and claimedRSVPs
+        // add unclaimed
+
+        //Send to eventOwser
+        (bool sent,) = myEvent.eventOwner.call{value unclaimed}("");
+
+        //set paidOut to true
+        myEvent.paidOut = true;
 
     }
+
 }
