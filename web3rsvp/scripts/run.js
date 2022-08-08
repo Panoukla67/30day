@@ -23,45 +23,45 @@ const main = async () => {
         timeStamp,
         deposit,
         maxCapacity,
-        eventDataCID,
-    )
-    let wait = await txn.wait();
-    console.log("NEW EVENT CREATED:", wait.events[0].event, wait.events[0].args);
-
-    let eventID = wait.events[0].args.eventID;
-    console.log("EVENT ID:", eventID);
+        eventDataCID
+      );
+      let wait = await txn.wait();
+      console.log("NEW EVENT CREATED:", wait.events[0].event, wait.events[0].args);
+      
+      let eventId = wait.events[0].args.eventId;
+      console.log("EVENT ID:", eventId);
 
 
     //copy
-    txn = await rsvpContract.createNewRSVP(eventID, { value: deposit });
+    txn = await rsvpContract.createNewRSVP(eventId, { value: deposit });
     wait = await txn.wait();
     console.log("NEW RSVP:", wait.events[0].event, wait.events[0].args);
 
     txn = await rsvpContract
     .connect(address1)
-    .createNewRSVP(eventID, { value: deposit });
+    .createNewRSVP(eventId, { value: deposit });
     wait = await txn.wait();
     console.log("NEW RSVP:", wait.events[0].event, wait.events[0].args);
 
     txn = await rsvpContract
     .connect(address2)
-    .createNewRSVP(eventID, { value: deposit });
+    .createNewRSVP(eventId, { value: deposit });
     wait = await txn.wait();
     console.log("NEW RSVP:", wait.events[0].event, wait.events[0].args);
 
-    //here
+
 
     //confirm all attendees
-    txn = await rsvpContract.confirmAllAttendees(eventID);
+    txn = await rsvpContract.confirmAll(eventId);
     wait = await txn.wait();
     wait.events.forEach((event) =>
-    console.log("CONFIRMED:", event.args.attendeeAddress)
+    console.log("CONFIRMED:", event.args.attendee) //changed
     );
 
     //pass time
     await hre.network.provider.send("evm_increaseTime", [15778800000000]);
 
-    txn = await rsvpContract.withdrawUnclaimedDeposits(eventID);
+    txn = await rsvpContract.withdrawalFunds(eventId);
     wait = await txn.wait();
     console.log("WITHDRAWN:", wait.events[0].event, wait.events[0].args);
 
