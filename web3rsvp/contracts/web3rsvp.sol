@@ -104,7 +104,6 @@ contract web3RSVP{
         
         //Check so they are in the list. Reduntant? - if we don't need the response 
         require(rsvpConfirm == attendee, "NO RSVP TO CONFIRM");
-        
 
         //To check if already confirmed 
         //address rsvpClaimed; // OLD SOLUTION
@@ -162,17 +161,36 @@ contract web3RSVP{
         //Check who can call
         require(msg.sender == myEvent.eventOwner, "NOT ALLOWED");
 
+        //Check if the event is already paid out
+        require(!myEvent.paidOut,"ALREADY PAID OUT");
+
         //Check required time after event
+        require(block.timestamp >= myEvent.eventTimestamp + 7 days, "TOO EARLY"); // plus x days
 
-        //Compare confirmedRSVPs and claimedRSVPs
-        // add unclaimed
+        //Check how much unclaimed eth
+        uint256 numberUnclaimed = myEvent.confirmedRSVPs.length - myEvent.claimedRSVPs.length;
 
-        //Send to eventOwser
-        (bool sent,) = myEvent.eventOwner.call{value unclaimed}("");
+        //Amount of unclaimed funds
+        uint256 unclaimed = numberUnclaimed * myEvent.deposit;
 
-        //set paidOut to true
+        //All eth in contract 
+        //uint32 unclaimed = address(this).balance; OLD solution
+
+        //Change stage first, then pay
         myEvent.paidOut = true;
 
+        //Send to eventOwser
+        (bool sent,) = myEvent.eventOwner.call{value: unclaimed}("");
+        //(bool sent,) = myEvent.eventOwner.call{value: address(this).balance}("");
+
+        //Change paidOut back if it did not succeed to send
+        if (!sent) {
+            myEvent.paidOut = false;
+        }
+
+        //Check if sent correctly, last check
+        require(sent,"NOT SENT");
+    
     }
 
 }
