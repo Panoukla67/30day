@@ -1,9 +1,25 @@
 //SPDX-License-Identifier: MIT
 
 //pragma solidity 0.8.0; //ParserError: Source file requires different compiler version
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 contract web3RSVP{
+
+    //EVENTS
+    event NewEventCreated(
+        bytes32 eventId,
+        string eventDataCID,
+        address creatorAddress,
+        uint256 eventTimestamp,
+        uint256 deposit,
+        uint256 maxAttendees
+    );
+
+    event NewRSVP(bytes32 eventId, address attendee);
+
+    event ConfirmedAttendee(bytes32 eventId, address attendee);
+
+    event DepositPaidOut(bytes32 eventId);
 
     //The needed info to create a new event
     struct CreateEvent {
@@ -54,13 +70,23 @@ contract web3RSVP{
             claimedRSVPs,
             false
         );
+
+        //event 
+        emit NewEventCreated(
+            eventId,
+            eventDataCID, 
+            msg.sender, 
+            eventTimestamp, 
+            deposit, 
+            maxCapacity
+        );
     }
 
     //Create new RSVP using eventId input
     function createNewRSVP(bytes32 eventId) external payable{
 
         // Calls the mapping for CreateEvent struct, names it and inputs eventID as the link
-        CreateEvent storage myEvent = idToEvent[eventId];
+        CreateEvent storage myEvent = idToEvent[eventId]; // why storage here
 
         //sender must send requiret eth for deposit
         require(msg.value == myEvent.deposit, "not enough eth in wallet");
@@ -78,6 +104,8 @@ contract web3RSVP{
 
         //everything checks out - add a new address as RSVP
         myEvent.confirmedRSVPs.push(payable(msg.sender));
+
+        emit NewRSVP(eventId, msg.sender);
 
     }
 
@@ -135,6 +163,9 @@ contract web3RSVP{
         }
 
         require(sent, "FALIED TO SEND");
+
+        //Event to be used
+        emit ConfirmedAttendee(eventId, attendee);
     }
 
     //confirm the all of the confirmedRSVPs
@@ -156,7 +187,7 @@ contract web3RSVP{
     function withdrawalFunds(bytes32 eventId) external{
 
         //look up the event from the mapping using the eventID provided
-        CreateEvent storage myEvent = idToEvent[eventId]; //storage for chancing the state
+        CreateEvent memory myEvent = idToEvent[eventId]; //why memory only
 
         //Check who can call
         require(msg.sender == myEvent.eventOwner, "NOT ALLOWED");
@@ -190,6 +221,8 @@ contract web3RSVP{
 
         //Check if sent correctly, last check
         require(sent,"NOT SENT");
+
+        emit DepositPaidOut(eventId);
     
     }
 
