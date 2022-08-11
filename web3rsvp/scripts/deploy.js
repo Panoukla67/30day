@@ -4,6 +4,7 @@
 // You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
+/*
 const hre = require("hardhat");
 
 async function main() {
@@ -27,3 +28,25 @@ main().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });
+*/
+
+const hre = require("hardhat");
+
+const main = async () => {
+  const rsvpContractFactory = await hre.ethers.getContractFactory("web3RSVP"); //changed
+  const rsvpContract = await rsvpContractFactory.deploy();
+  await rsvpContract.deployed();
+  console.log("Contract deployed to:", rsvpContract.address);
+};
+
+const runMain = async () => {
+  try {
+    await main();
+    process.exit(0);
+  } catch (error) {
+    console.log(error);
+    process.exit(1);
+  }
+};
+
+runMain();

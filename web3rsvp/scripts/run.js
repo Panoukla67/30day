@@ -31,8 +31,6 @@ const main = async () => {
       let eventId = wait.events[0].args.eventId;
       console.log("EVENT ID:", eventId);
 
-
-    //copy
     txn = await rsvpContract.createNewRSVP(eventId, { value: deposit });
     wait = await txn.wait();
     console.log("NEW RSVP:", wait.events[0].event, wait.events[0].args);
@@ -49,8 +47,6 @@ const main = async () => {
     wait = await txn.wait();
     console.log("NEW RSVP:", wait.events[0].event, wait.events[0].args);
 
-
-
     //confirm all attendees
     txn = await rsvpContract.confirmAll(eventId);
     wait = await txn.wait();
@@ -64,16 +60,7 @@ const main = async () => {
     txn = await rsvpContract.withdrawalFunds(eventId);
     wait = await txn.wait();
     console.log("WITHDRAWN:", wait.events[0].event, wait.events[0].args);
-
-
 };
-
-
-
-
-
-
-
 
 const runMain = async () =>{
     try{
